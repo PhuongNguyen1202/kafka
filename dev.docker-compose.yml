@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - learnnet
+  
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    restart: always
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # KAFKA_TOPIC_PARTITIONS: 3
+    networks:
+      - learnnet
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    ports:
+      - "9021:9021"
+    restart: always
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka:9092
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      # CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+    depends_on:
+      - zookeeper
+      - kafka
+    volumes:
+      - /tmp/control-center/data:/var/lib/confluent-control-center
+      - /tmp/control-center/logs:/var/log/confluent-control-center
+    networks:
+      - learnnet
+
+networks:
+  learnnet:
+    driver: bridge
+
+  
