@@ -1,3 +1,5 @@
+import time
+
 from confluent_kafka import Consumer, KafkaException
 from confluent_kafka.serialization import StringDeserializer
 
@@ -28,10 +30,11 @@ while True:
             logger.logError(f"Kafka Consumer Error: {msg.error()}")
             raise KafkaException(msg.error())
         else:
-            record_key = StringDeserializer()(msg.key())
-            record_value = StringDeserializer()(msg.value())
+            record_key: str = StringDeserializer()(msg.key())  # <=> decode('utf-8')
+            record_value: str = StringDeserializer()(msg.value())  # <=> decode('utf-8')
             logger.logInfo(f"Message Info: topic {msg.topic()} - partition [{msg.partition()}] @ offset {msg.offset()}")
-            logger.logInfo(f"Received message: key={msg.key()} & value={msg.value()}")
+            logger.logInfo(f"Received message: key={record_key} & value={record_value}")
+            time.sleep(Config.SLEEP_TIME)
 
     except KeyboardInterrupt:
         break

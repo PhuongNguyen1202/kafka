@@ -9,13 +9,13 @@ from config import Config
 from dto import MessageDto
 
 
+# FastAPI Application
 app = FastAPI()
 
 
 def acked(err, msg):
-    """Delivery report handler called on
-    successful or failed delivery of message
-    """
+    '''Delivery report handler called on successful or failed delivery of message.
+    '''
     if err is not None:
         logger.logError(f'Failed to deliver message: {err}')
     else:
@@ -35,7 +35,7 @@ async def startup_event():
     admin_client = AdminClient({'bootstrap.servers': Config.KAFKA_SERVERS})
     producer = Producer({'bootstrap.servers': Config.KAFKA_SERVERS})
 
-    # Tạo một KafkaAdminClient để cấu hình số partition
+    # Topic Creation
     available_topics = admin_client.list_topics().topics
     if Config.KAFKA_TOPIC not in available_topics:
         new_topic = NewTopic(
@@ -62,19 +62,12 @@ def shutdown_event():
     producer.flush()
 
 
-# API endpoint để gửi message vào Kafka
 @app.post("/send-message")
 async def send_message(message: MessageDto):
     try:
-        # Tính toán partition cho message dựa trên key
-        # partition = hash(message.key) % num_partitions
-        # print(partition)
-
-        # Gửi message vào Kafka topic với partition tương ứng
-        record_key: bytes = StringSerializer()(message.key)
-        record_value: bytes = StringSerializer()(message.value)
+        record_key: bytes = StringSerializer()(message.key)  # <=> encode('utf-8')
+        record_value: bytes = StringSerializer()(message.value)  # <=> encode('utf-8')
         if message.partition is not None:
-            print('-----with partition-------')
             producer.produce(
                 topic=Config.KAFKA_TOPIC,
                 key=record_key,
@@ -83,15 +76,12 @@ async def send_message(message: MessageDto):
                 on_delivery=acked,
             )
         else:
-            print('-----without partition-------')
             producer.produce(
                 topic=Config.KAFKA_TOPIC,
                 key=record_key,
                 value=record_value,
                 on_delivery=acked,
             )
-        # print(f'produced message: key {record_key} value {record_value}')
-        # producer.flush()  # Đảm bảo message được gửi đi
         producer.poll(0)
         logger.logInfo(f'Produced message: key={record_key}, value={record_value}.')
         return JSONResponse({
@@ -106,11 +96,3 @@ async def send_message(message: MessageDto):
             "statusCode" : status.HTTP_500_INTERNAL_SERVER_ERROR,
             "errorMessage": error,
         })
-
-# @app.post("/message")
-# def create_message(message: str):
-#     return {"status": message}
-
-
-# if __name__ == "__main__":
-#     uvicorn.run(":app", host="localhost", port=8081, reload=True)

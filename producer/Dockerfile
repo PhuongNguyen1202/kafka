@@ -6,7 +6,6 @@ WORKDIR /app
 # ENV PYTHONDONTWRITEBYTECODE 1
 # ENV PYTHONUNBUFFERED 1
 
-# install dependencies
 RUN pip install --upgrade pip
 
 RUN apt-get update

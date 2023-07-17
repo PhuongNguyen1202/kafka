@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  producer:
+    container_name: producer
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    restart: always
+    # depends_on:
+    #   - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      KAFKA_SERVERS: kafka:9092
+      KAFKA_TOPIC: my-topic
+      KAFKA_TOPIC_PARTITIONS: 3
+      KAFKA_REPLICATION_FACTOR: 1
+    networks:
+      -  kafka_kafka-net
+
+  consumer1:
+    container_name: consumer1
+    build:
+      context: ./consumer
+      dockerfile: ./Dockerfile
+    restart: always
+    depends_on:
+      # - kafka
+      - producer
+    environment:
+      KAFKA_SERVERS: kafka:9092
+      KAFKA_TOPIC: my-topic
+      KAFKA_CONSUMER_GROUP_ID: my-consumer-group-1
+    networks:
+      -  kafka_kafka-net
+
+  consumer2:
+    container_name: consumer2
+    build:
+      context: ./consumer
+      dockerfile: ./Dockerfile
+    restart: always
+    depends_on:
+      # - kafka
+      - producer
+    environment:
+      KAFKA_SERVERS: kafka:9092
+      KAFKA_TOPIC: my-topic
+      KAFKA_CONSUMER_GROUP_ID: my-consumer-group-1
+    networks:
+      -  kafka_kafka-net
+  
+  consumer3:
+    container_name: consumer3
+    build:
+      context: ./consumer
+      dockerfile: ./Dockerfile
+    restart: always
+    depends_on:
+      # - kafka
+      - producer
+    environment:
+      KAFKA_SERVERS: kafka:9092
+      KAFKA_TOPIC: my-topic
+      KAFKA_CONSUMER_GROUP_ID: my-consumer-group-1
+    networks:
+      -  kafka_kafka-net
+
+  consumer4:
+    container_name: consumer4
+    build:
+      context: ./consumer
+      dockerfile: ./Dockerfile
+    restart: always
+    depends_on:
+      # - kafka
+      - producer
+    environment:
+      KAFKA_SERVERS: kafka:9092
+      KAFKA_TOPIC: my-topic
+      KAFKA_CONSUMER_GROUP_ID: my-consumer-group-2
+    networks:
+      -  kafka_kafka-net
+
+networks:
+  kafka_kafka-net:
+    external: true
