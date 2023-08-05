@@ -8,8 +8,8 @@ services:
       - "8080:8080"
     volumes:
       - "jenkins-data:/var/jenkins_home"
-    env_file:
-      - environments.env
+    # env_file:
+    #   - environments.env
     networks:
       - jenkins_network
 
@@ -20,8 +20,8 @@ services:
     command: ["start", "--config=/ngrok/ngrok.yml", "jenkins"]
     ports:
       - "4040:4040"
-    env_file:
-      - environments.env
+    # env_file:
+    #   - environments.env
     networks:
       - jenkins_network
 
