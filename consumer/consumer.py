@@ -40,3 +40,4 @@ while True:
         break
 
 consumer.close()
+
