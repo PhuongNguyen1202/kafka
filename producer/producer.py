@@ -96,3 +96,4 @@ async def send_message(message: MessageDto):
             "statusCode" : status.HTTP_500_INTERNAL_SERVER_ERROR,
             "errorMessage": error,
         })
+
