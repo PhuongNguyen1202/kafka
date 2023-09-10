@@ -1,0 +1,88 @@
+pipeline {
+    environment {
+        imageproducer = 'phuong120200/kafka-producer:v1.0.0'
+        imageconsumer = 'phuong120200/kafka-consumer:v1.0.0'
+        registryCredential = '663bd9cb-637b-44cc-96a2-eb338d7198c2'
+        gitCredentialsId = 'phuong_jenkin_demo'
+        dockerhubUrl = 'https://index.docker.io/v1/'
+    }
+    
+    agent any
+    stages {
+        stage('Cloning Git') {
+            steps {
+                git([url: 'https://github.com/PhuongNguyen1202/kafka.git', branch: 'master', credentialsId: gitCredentialsId])
+            }
+        }
+        
+        stage('Run Unit Test') {
+            when { changeset "**" }
+            steps {
+                echo "Changes in the repository, running Unit Test..."
+            }
+        }
+        
+        stage('Build and deploy image') {
+            parallel {
+                stage('Build And Push Producer'){
+                    when { changeset "**/producer/**/*" }
+                    stages{
+                        stage('Build Producer Image'){
+                            steps{
+                                dir('./producer/'){
+                                    script{ producer = docker.build(imageproducer) }
+                                }
+                            }
+                        }
+                        
+                        stage('Push Producer Image'){
+                            steps{
+                                script{
+                                    docker.withRegistry(dockerhubUrl, registryCredential) {
+                                        producer.push()
+                                      }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Build And Push Consumer'){
+                    when { changeset "**/consumer/**/*" }
+                    stages{
+                        stage('Build Consumer Image'){
+                            steps{
+                                dir('./consumer/'){
+                                    script{ consumer = docker.build(imageconsumer) }
+                                }
+                            }
+                        }
+                        
+                        stage('Push Consumer Image'){
+                            steps{
+                                script{
+                                    docker.withRegistry(dockerhubUrl, registryCredential) {
+                                        consumer.push()
+                                      }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // }
+        
+        stage('Remove None image'){
+            steps{
+                script{
+                    try {
+                        sh 'docker images -a | grep none | awk \'{ print $3; }\' | xargs docker rmi'
+                    } catch (Exception e) {
+                        echo "Failed to remove none Docker image!"
+                    }
+                }
+            }
+        }
+    }
+}
